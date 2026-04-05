@@ -29,3 +29,30 @@ t = transmission(img, A)
 density = 1 - t.mean()
 
 print("Smoke Density:", density)
+cv2.imshow("Original", (img * 255).astype(np.uint8))
+cv2.imshow("Dark Channel", dark)
+cv2.imshow("Transmission", t)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+import os
+
+folder = "dataset/indoor/hazy"
+
+for file in os.listdir(folder):
+    path = os.path.join(folder, file)
+
+    img = cv2.imread(path)
+    if img is None:
+        continue
+
+    img = cv2.resize(img, (256, 256)) / 255.0
+
+    dark = dark_channel(img)
+    A = atmospheric_light(img, dark)
+    t = transmission(img, A)
+
+    density = 1 - t.mean()
+
+    print(file, "→", density)
