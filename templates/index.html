@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smoke Detection Demo</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Smoke Detection (DCP + RandomForest)</h1>
+
+      <section class="card">
+        <h2>Upload an image</h2>
+        <input id="fileInput" type="file" accept="image/*" />
+        <button id="uploadBtn">Predict</button>
+        <p id="uploadStatus" class="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Live camera (optional)</h2>
+        <div class="row">
+          <video id="video" width="480" height="360" autoplay playsinline muted></video>
+          <canvas id="canvas" width="480" height="360" style="display: none"></canvas>
+        </div>
+        <div class="row">
+          <button id="startCameraBtn">Start camera</button>
+          <button id="stopCameraBtn" disabled>Stop</button>
+        </div>
+        <p id="cameraStatus" class="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Result</h2>
+        <div class="row">
+          <div class="col">
+            <div id="resultText" class="result-text">No prediction yet.</div>
+          </div>
+          <div class="col">
+            <div class="preview-label">Estimated transmission preview</div>
+            <img id="tEstPreview" class="preview" alt="Transmission preview will appear here" />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+

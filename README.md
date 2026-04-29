@@ -1,112 +1,80 @@
-# Smoke Density Estimation and Air Quality Monitoring (Dark Channel Prior)
+# Smoke Density Estimation and Air Quality Monitoring using Dark Channel Prior (DCP)
 
-A complete OpenCV + NumPy project for estimating smoke density from **images**, **video files**, or **webcam streams** using the **Dark Channel Prior (DCP)** method and atmospheric scattering model.
+This project estimates **smoke/haze density from images** (no physical sensors) using the **Dark Channel Prior (DCP)** algorithm and then classifies **air quality** into:
 
-## Model
+- **Good**
+- **Moderate**
+- **Hazardous**
 
-The implementation follows:
+Core idea:
 
-\[
-I(x) = J(x) \cdot t(x) + A \cdot (1 - t(x))
-\]
+- **Transmission** \(t\) drops as smoke/haze increases
+- **Smoke Density** \(= 1 - \text{Transmission}\)
 
-Where:
-- `I(x)` = observed image
-- `J(x)` = scene radiance
-- `t(x)` = transmission map
-- `A` = atmospheric light
+## Dataset (RESIDE ITS)
 
-## Features
+Place the dataset in `dataset/` with:
 
-- Dark Channel Prior pipeline:
-  - RGB min channel
-  - 15x15 (default) local minimum filter
-  - Atmospheric light from top 0.1% brightest dark-channel pixels
-  - Transmission estimation with `omega` parameter
-  - Guided filter refinement (if `cv2.ximgproc` is available), Gaussian fallback otherwise
-- Smoke density estimation:
-  - `smoke_density = 1 - mean(transmission)`
-- Air quality classification:
-  - Good: `0.0 - 0.2`
-  - Moderate: `0.2 - 0.5`
-  - Unhealthy: `0.5 - 0.7`
-  - Hazardous: `> 0.7`
-- Dashboard visualization includes:
-  - Original frame + overlays
-  - Dark channel
-  - Transmission map
-  - Smoke heatmap
-  - Transmission histogram
-- Real-time webcam processing
-- FPS display and processing scale optimization
-- Save output image/video dashboard
+- `dataset/haze/` (input hazy images)
+- `dataset/trans/` (ground-truth transmission maps; 1=clear, 0=dense)
+- `dataset/clear/` (clean reference images; not required for training here)
 
-## Project Files
+Filename pairing expected (typical RESIDE ITS):
 
-- `smoke_density_monitor.py` – full implementation
-- `requirements.txt` – dependencies
+- haze: `10001_01_0.9797.png`
+- trans: `10001_01.png`
+
+## Pipeline
+
+- Load paired samples from `haze/` and `trans/`
+- Preprocess: resize to **256×256**, normalize to **0–1**
+- Apply DCP on haze image:
+  - `dark_channel(image)`
+  - `atmospheric_light(image, dark)`
+  - `transmission(image, A)`
+- Extract features from estimated transmission map:
+  - mean, std, min, max
+- Generate labels from **ground-truth transmission**:
+  - Good: density < 0.2
+  - Moderate: density < 0.5
+  - Hazardous: otherwise
+- Train `RandomForestClassifier`
+- Evaluate with accuracy, classification report, confusion matrix
+- Predict for a new image and display:
+  - original haze image
+  - estimated transmission map
+  - smoke density %
+  - predicted air quality label
 
 ## Installation
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
+.venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-## Usage
-
-### 1) Image input
+## Train
 
 ```bash
-python smoke_density_monitor.py \
-  --mode image \
-  --source path/to/image.jpg \
-  --patch-size 15 \
-  --omega 0.95 \
-  --save-output \
-  --output-path outputs/result.png
+py main.py train --dataset_dir dataset --limit -1 --cv_folds 5 --model_out outputs/model.joblib
 ```
 
-### 2) Video file input
+Use fewer samples (faster):
 
 ```bash
-python smoke_density_monitor.py \
-  --mode video \
-  --source path/to/video.mp4 \
-  --process-scale 0.75 \
-  --save-output \
-  --output-path outputs/result.mp4
+py main.py train --dataset_dir dataset --limit 500 --cv_folds 5
 ```
 
-### 3) Webcam input
+## Predict (single image)
 
 ```bash
-python smoke_density_monitor.py \
-  --mode webcam \
-  --source 0 \
-  --process-scale 0.7
+python main.py predict --model outputs/model.joblib --image dataset/haze/your_image.png
 ```
 
-## CLI Arguments
+## Project Files
 
-- `--mode {image,video,webcam}` (required)
-- `--source` input path or camera index (default: `0`)
-- `--patch-size` DCP patch size (default: `15`)
-- `--omega` transmission parameter (default: `0.95`)
-- `--process-scale` speed optimization scale in `(0,1]` (default: `1.0`)
-- `--save-output` save dashboard output
-- `--output-path` output image/video path
-- `--no-display` disable OpenCV windows
-
-## Notes
-
-- For guided filter refinement, install `opencv-contrib-python` instead of `opencv-python` to get `cv2.ximgproc`:
-
-```bash
-pip uninstall -y opencv-python
-pip install opencv-contrib-python
-```
-
-- Press `q` or `Esc` to stop video/webcam processing.
+- `preprocessing.py`: dataset loading + preprocessing
+- `feature_extraction.py`: DCP functions + feature extraction + label logic
+- `main.py`: training/evaluation + prediction/visualization CLI
 
