@@ -41,6 +41,13 @@ def predict_smoke_from_bgr(
     feats, t_est = extract_features(img)
     X = np.array([feats], dtype=np.float32)
 
+    # Backward-compatible feature handling: if the trained model expects
+    # fewer features (e.g., 4), slice our richer feature vector.
+    if hasattr(clf, "n_features_in_"):
+        n_expected = int(clf.n_features_in_)
+        if X.shape[1] != n_expected:
+            X = X[:, :n_expected]
+
     pred_label = int(clf.predict(X)[0])
     smoke_density = 1.0 - float(np.mean(t_est))
     smoke_pct = 100.0 * smoke_density

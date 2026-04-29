@@ -35,15 +35,62 @@ def transmission(image, A, omega=0.95):
 # FEATURE EXTRACTION
 # -----------------------------
 def extract_features(image):
+    """
+    Compute a richer set of DCP-based features from the image.
+
+    All values are derived from the estimated transmission map and the
+    dark channel, which correlate with smoke / haze density.
+    """
     dark = dark_channel(image)
     A = atmospheric_light(image, dark)
     t_est = transmission(image, A)
 
+    # Flatten for easy statistics
+    t_flat = t_est.ravel()
+    d_flat = dark.ravel()
+
+    # Transmission statistics
+    t_mean = float(np.mean(t_flat))
+    t_std = float(np.std(t_flat))
+    t_min = float(np.min(t_flat))
+    t_max = float(np.max(t_flat))
+    t_p10 = float(np.percentile(t_flat, 10))
+    t_p25 = float(np.percentile(t_flat, 25))
+    t_p50 = float(np.percentile(t_flat, 50))
+    t_p75 = float(np.percentile(t_flat, 75))
+    t_p90 = float(np.percentile(t_flat, 90))
+
+    # Dark-channel statistics
+    d_mean = float(np.mean(d_flat))
+    d_std = float(np.std(d_flat))
+    d_min = float(np.min(d_flat))
+    d_max = float(np.max(d_flat))
+
+    # Atmospheric light magnitude (per-channel + norm)
+    A_r, A_g, A_b = [float(v) for v in A]
+    A_norm = float(np.linalg.norm(A))
+
     features = [
-        np.mean(t_est),
-        np.std(t_est),
-        np.min(t_est),
-        np.max(t_est)
+        # Transmission stats
+        t_mean,
+        t_std,
+        t_min,
+        t_max,
+        t_p10,
+        t_p25,
+        t_p50,
+        t_p75,
+        t_p90,
+        # Dark channel stats
+        d_mean,
+        d_std,
+        d_min,
+        d_max,
+        # Atmospheric light
+        A_r,
+        A_g,
+        A_b,
+        A_norm,
     ]
 
     return features, t_est

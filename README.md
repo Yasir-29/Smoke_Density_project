@@ -72,9 +72,30 @@ py main.py train --dataset_dir dataset --limit 500 --cv_folds 5
 python main.py predict --model outputs/model.joblib --image dataset/haze/your_image.png
 ```
 
+## Web Demo (upload + real-time camera)
+
+1. Train the model first (use `--limit -1` to load all paired samples):
+```bash
+py main.py train --dataset_dir dataset --limit -1 --cv_folds 5 --model_out outputs/model.joblib
+```
+
+2. Install requirements (includes Streamlit):
+```bash
+py -m pip install -r requirements.txt
+```
+
+3. Run the Streamlit webpage:
+```bash
+py -m streamlit run streamlit_app.py
+```
+
+4. Open in your browser (Streamlit prints the exact URL in the terminal).
+
 ## Project Files
 
 - `preprocessing.py`: dataset loading + preprocessing
 - `feature_extraction.py`: DCP functions + feature extraction + label logic
 - `main.py`: training/evaluation + prediction/visualization CLI
+- `web_app.py`: Flask server + `/api/predict` endpoint
+- `templates/index.html` + `static/app.js`: webpage UI for upload/camera
 

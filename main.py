@@ -61,6 +61,8 @@ def train_model(
         random_state=random_state,
         class_weight="balanced",
         n_jobs=-1,
+        min_samples_leaf=2,
+        max_features="sqrt",
     )
     clf.fit(X_train, y_train)
 
@@ -74,6 +76,8 @@ def train_model(
                 random_state=random_state,
                 class_weight="balanced",
                 n_jobs=-1,
+                min_samples_leaf=2,
+                max_features="sqrt",
             )
             cv_clf.fit(X_train[tr], y_train[tr])
             cv_scores.append(float(cv_clf.score(X_train[va], y_train[va])))
@@ -112,6 +116,12 @@ def predict_image(model_path: Path, image_path: Path) -> None:
     img = preprocess_image(img_bgr, size=(256, 256))
     feats, t_est = extract_features(img)
     X = np.array([feats], dtype=np.float32)
+
+    if hasattr(clf, "n_features_in_"):
+        n_expected = int(clf.n_features_in_)
+        if X.shape[1] != n_expected:
+            X = X[:, :n_expected]
+
     pred = int(clf.predict(X)[0])
 
     smoke_density = 1.0 - float(np.mean(t_est))
@@ -148,7 +158,7 @@ def main() -> None:
     p_train.add_argument("--limit", type=int, default=-1, help="Max paired samples to load (use -1 for all).")
     p_train.add_argument("--test_size", type=float, default=0.2)
     p_train.add_argument("--random_state", type=int, default=42)
-    p_train.add_argument("--n_estimators", type=int, default=300)
+    p_train.add_argument("--n_estimators", type=int, default=600)
     p_train.add_argument("--cv_folds", type=int, default=5, help="GroupKFold CV on train split (0 or 1 to disable).")
     p_train.add_argument("--model_out", type=Path, default=Path("outputs/model.joblib"))
 

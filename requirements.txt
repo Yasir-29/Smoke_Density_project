@@ -3,4 +3,5 @@ numpy
 scikit-learn
 matplotlib
 joblib
-flask
+streamlit
+pillow
