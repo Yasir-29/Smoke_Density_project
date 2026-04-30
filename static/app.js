@@ -8,6 +8,7 @@ const cameraStatus = document.getElementById("cameraStatus");
 
 const resultText = document.getElementById("resultText");
 const tEstPreview = document.getElementById("tEstPreview");
+const highlightPreview = document.getElementById("highlightPreview");
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
@@ -48,6 +49,9 @@ async function predictImageBlob(blob, statusEl) {
     setResult(data.label_name, data.smoke_pct);
     if (data.t_est_preview_b64) {
       tEstPreview.src = `data:image/png;base64,${data.t_est_preview_b64}`;
+    }
+    if (data.highlight_preview_b64) {
+      highlightPreview.src = `data:image/png;base64,${data.highlight_preview_b64}`;
     }
     statusEl.textContent = "";
   } catch (err) {

@@ -124,7 +124,11 @@ def predict_image(model_path: Path, image_path: Path) -> None:
 
     _ml_pred = int(clf.predict(X)[0])
 
-    smoke_density = 1.0 - float(np.mean(t_est))
+    # Calculate density based on the 25% thickest smoke
+    t_flat = t_est.ravel()
+    k = max(1, int(t_flat.size * 0.25))
+    lowest_t = np.partition(t_flat, k)[:k]
+    smoke_density = 1.0 - float(np.mean(lowest_t))
     smoke_pct = 100.0 * smoke_density
 
     if smoke_pct < 25.0:

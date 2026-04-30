@@ -102,7 +102,12 @@ def generate_label(trans):
     if trans.ndim == 3:
         trans = trans[:, :, 0]
     trans = np.clip(trans, 0.0, 1.0)
-    density = 1 - float(np.mean(trans))
+    
+    # Calculate density based on the 25% thickest smoke
+    t_flat = trans.ravel()
+    k = max(1, int(t_flat.size * 0.25))
+    lowest_t = np.partition(t_flat, k)[:k]
+    density = 1.0 - float(np.mean(lowest_t))
 
     # 0: Low, 1: Moderate, 2: High
     if density < 0.25:

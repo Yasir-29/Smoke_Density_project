@@ -89,10 +89,20 @@ if predict_btn:
         else:
             result_box.info(result_msg)
 
-        # Show transmission-map preview (grayscale)
-        if result.get("t_est_preview_b64"):
-            t_img = _b64png_to_pil(result["t_est_preview_b64"])
-            preview_box.image(t_img, caption="Estimated transmission map (preview)", use_column_width=True)
+        # Show images as smaller cards side-by-side
+        with preview_box.container():
+            orig_img = Image.open(io.BytesIO(image_bytes))
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.image(orig_img, caption="Original Image", use_column_width=True)
+            with col2:
+                if result.get("t_est_preview_b64"):
+                    t_img = _b64png_to_pil(result["t_est_preview_b64"])
+                    st.image(t_img, caption="Transmission Map", use_column_width=True)
+            with col3:
+                if result.get("highlight_preview_b64"):
+                    h_img = _b64png_to_pil(result["highlight_preview_b64"])
+                    st.image(h_img, caption="Smoke Highlight", use_column_width=True)
 
     except Exception as e:  # noqa: BLE001
         result_box.error(f"Prediction failed: {e}")

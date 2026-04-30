@@ -28,6 +28,14 @@ def _b64_png_from_gray01(img01: np.ndarray) -> str:
     return base64.b64encode(buf.tobytes()).decode("ascii")
 
 
+def _b64_png_from_bgr(img_bgr: np.ndarray) -> str:
+    """Convert a BGR uint8 image to base64-encoded PNG."""
+    ok, buf = cv2.imencode(".png", img_bgr)
+    if not ok:
+        raise RuntimeError("Failed to encode PNG preview.")
+    return base64.b64encode(buf.tobytes()).decode("ascii")
+
+
 def predict_smoke_from_bgr(
     clf: Any,
     img_bgr: np.ndarray,
@@ -50,8 +58,11 @@ def predict_smoke_from_bgr(
 
     # Predict with ML model (optional logging could go here)
     _ml_pred_label = int(clf.predict(X)[0])
-    
-    smoke_density = 1.0 - float(np.mean(t_est))
+    # Calculate density based on the 25% thickest smoke
+    t_flat = t_est.ravel()
+    k = max(1, int(t_flat.size * 0.25))
+    lowest_t = np.partition(t_flat, k)[:k]
+    smoke_density = 1.0 - float(np.mean(lowest_t))
     smoke_pct = 100.0 * smoke_density
 
     # Guarantee 100% accuracy on user-defined thresholds
@@ -62,12 +73,20 @@ def predict_smoke_from_bgr(
     else:
         pred_label = 2
 
+    # Create highlighted smoke overlay (heatmap)
+    density = 1.0 - t_est
+    density_u8 = np.clip(density * 255.0, 0, 255).astype(np.uint8)
+    heatmap = cv2.applyColorMap(density_u8, cv2.COLORMAP_JET)
+    img_bgr_u8 = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+    overlay = cv2.addWeighted(img_bgr_u8, 0.5, heatmap, 0.5, 0)
+
     return {
         "label_id": pred_label,
         "label_name": label_to_name(pred_label),
         "smoke_pct": round(smoke_pct, 2),
         "smoke_density": round(smoke_density, 6),
         "t_est_preview_b64": _b64_png_from_gray01(t_est),
+        "highlight_preview_b64": _b64_png_from_bgr(overlay),
     }
 
 
