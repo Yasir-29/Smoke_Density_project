@@ -129,6 +129,21 @@ def predict_image(model_path: Path, image_path: Path) -> None:
     k = max(1, int(t_flat.size * 0.25))
     lowest_t = np.partition(t_flat, k)[:k]
     smoke_density = 1.0 - float(np.mean(lowest_t))
+
+    # --- TEXTURE/VARIANCE RULE ---
+    threshold_t = float(np.max(lowest_t))
+    smoke_mask = (t_est <= threshold_t).astype(np.uint8)
+    
+    img_u8 = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+    gray = cv2.cvtColor(img_u8, cv2.COLOR_BGR2GRAY)
+    mean_val, std_val = cv2.meanStdDev(gray, mask=smoke_mask)
+    
+    brightness = float(mean_val[0][0])
+    std = float(std_val[0][0])
+
+    if brightness > 140.0 and std < 20.0:
+        smoke_density = 0.0
+
     smoke_pct = 100.0 * smoke_density
 
     if smoke_pct < 25.0:
