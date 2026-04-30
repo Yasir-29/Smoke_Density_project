@@ -75,7 +75,7 @@ def predict_smoke_from_bgr(
     overall_brightness = float(mean_val[0][0])
     overall_std = float(std_val[0][0])
 
-    if overall_brightness > 180.0 and overall_std < 25.0:
+    if overall_brightness > 140.0 and overall_std < 65.0:
         smoke_density = 0.0
 
 
