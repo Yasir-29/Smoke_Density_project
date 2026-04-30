@@ -64,6 +64,21 @@ def predict_smoke_from_bgr(
     lowest_t = np.partition(t_flat, k)[:k]
     smoke_density = 1.0 - float(np.mean(lowest_t))
 
+    # --- WHITE WALL / LIGHT FILTER ---
+    # To prevent white walls or bright lights from being classified as thick smoke,
+    # we check the variance of the ENTIRE image (not just the masked region).
+    # A wall/light will be very bright overall and have very low overall variance.
+    img_u8 = np.clip(img * 255.0, 0, 255).astype(np.uint8)
+    gray = cv2.cvtColor(img_u8, cv2.COLOR_BGR2GRAY)
+    mean_val, std_val = cv2.meanStdDev(gray)
+    
+    overall_brightness = float(mean_val[0][0])
+    overall_std = float(std_val[0][0])
+
+    if overall_brightness > 180.0 and overall_std < 25.0:
+        smoke_density = 0.0
+
+
     smoke_pct = 100.0 * smoke_density
 
     # Guarantee 100% accuracy on user-defined thresholds
