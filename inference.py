@@ -76,8 +76,8 @@ def predict_smoke_from_bgr(
     brightness = float(mean_val[0][0])
     std = float(std_val[0][0])
 
-    # If the "smoke" area is very bright and very smooth, it's sky/light
-    if brightness > 140.0 and std < 20.0:
+    # If the "smoke" area is bright enough and very smooth, it's sky/light/wall
+    if brightness > 100.0 and std < 40.0:
         smoke_density = 0.0
 
     smoke_pct = 100.0 * smoke_density

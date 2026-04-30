@@ -141,7 +141,7 @@ def predict_image(model_path: Path, image_path: Path) -> None:
     brightness = float(mean_val[0][0])
     std = float(std_val[0][0])
 
-    if brightness > 140.0 and std < 20.0:
+    if brightness > 100.0 and std < 40.0:
         smoke_density = 0.0
 
     smoke_pct = 100.0 * smoke_density
