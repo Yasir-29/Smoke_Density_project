@@ -64,23 +64,6 @@ def predict_smoke_from_bgr(
     lowest_t = np.partition(t_flat, k)[:k]
     smoke_density = 1.0 - float(np.mean(lowest_t))
 
-    # --- TEXTURE/VARIANCE RULE ---
-    # Ignore smooth, bright areas like clear skies or bright lights
-    threshold_t = float(np.max(lowest_t))
-    smoke_mask = (t_est <= threshold_t).astype(np.uint8)
-    
-    img_u8 = np.clip(img * 255.0, 0, 255).astype(np.uint8)
-    gray = cv2.cvtColor(img_u8, cv2.COLOR_BGR2GRAY)
-    mean_val, std_val = cv2.meanStdDev(gray, mask=smoke_mask)
-    
-    brightness = float(mean_val[0][0])
-    std = float(std_val[0][0])
-
-    # If the "smoke" area is bright enough and perfectly smooth, it's sky/light/wall
-    # Lowered standard deviation threshold from 40.0 to 10.0 so thick white smoke isn't ignored
-    if brightness > 100.0 and std < 10.0:
-        smoke_density = 0.0
-
     smoke_pct = 100.0 * smoke_density
 
     # Guarantee 100% accuracy on user-defined thresholds
