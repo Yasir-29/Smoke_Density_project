@@ -104,13 +104,13 @@ def generate_label(trans):
     trans = np.clip(trans, 0.0, 1.0)
     density = 1 - float(np.mean(trans))
 
-    # 0: Good, 1: Moderate, 2: Hazardous
-    if density < 0.2:
+    # 0: Low, 1: Moderate, 2: High
+    if density < 0.25:
         return 0
-    if density < 0.5:
+    if density <= 0.60:
         return 1
     return 2
 
 
 def label_to_name(label: int) -> str:
-    return {0: "Good", 1: "Moderate", 2: "Hazardous"}.get(int(label), "Unknown")
+    return {0: "Low", 1: "Moderate", 2: "High"}.get(int(label), "Unknown")

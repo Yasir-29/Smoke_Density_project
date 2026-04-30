@@ -21,13 +21,13 @@ def _b64png_to_pil(b64: str) -> Image.Image:
 
 
 def _label_style(label_name: str) -> dict:
-    if label_name == "Good":
-        return {"kind": "success", "prefix": "Air quality: Good"}
+    if label_name == "Low":
+        return {"kind": "success", "prefix": "Smoke: Low"}
     if label_name == "Moderate":
-        return {"kind": "warning", "prefix": "Air quality: Moderate"}
-    if label_name == "Hazardous":
-        return {"kind": "error", "prefix": "Air quality: Hazardous"}
-    return {"kind": "info", "prefix": "Air quality: Unknown"}
+        return {"kind": "warning", "prefix": "Smoke: Moderate"}
+    if label_name == "High":
+        return {"kind": "error", "prefix": "Smoke: High"}
+    return {"kind": "info", "prefix": "Smoke: Unknown"}
 
 
 st.set_page_config(page_title="Smoke Detection", layout="wide")

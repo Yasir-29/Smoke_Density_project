@@ -47,7 +47,7 @@ def train_model(
     class_counts = np.bincount(y, minlength=3)
     print(f"Loaded samples: {len(X)}")
     print(f"Unique scenes (group ids): {unique_scenes}")
-    print(f"Class counts [Good, Moderate, Hazardous]: {class_counts.tolist()}")
+    print(f"Class counts [Low, Moderate, High]: {class_counts.tolist()}")
 
     # Critical for RESIDE: split by *scene* to prevent leakage
     splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
@@ -94,7 +94,7 @@ def train_model(
             y_test,
             y_pred,
             labels=labels,
-            target_names=["Good", "Moderate", "Hazardous"],
+            target_names=["Low", "Moderate", "High"],
             zero_division=0,
         )
     )
@@ -122,10 +122,17 @@ def predict_image(model_path: Path, image_path: Path) -> None:
         if X.shape[1] != n_expected:
             X = X[:, :n_expected]
 
-    pred = int(clf.predict(X)[0])
+    _ml_pred = int(clf.predict(X)[0])
 
     smoke_density = 1.0 - float(np.mean(t_est))
     smoke_pct = 100.0 * smoke_density
+
+    if smoke_pct < 25.0:
+        pred = 0
+    elif smoke_pct <= 60.0:
+        pred = 1
+    else:
+        pred = 2
 
     print(f"Predicted air quality: {label_to_name(pred)}")
     print(f"Smoke density: {smoke_pct:.2f}%")
